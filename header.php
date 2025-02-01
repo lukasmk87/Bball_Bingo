@@ -4,6 +4,11 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+include 'db.php';
+include 'settings.php';
+
+// Debug-Modus aus der Datenbank abfragen
+$debug_mode = get_debug_mode($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -29,3 +34,10 @@ if (session_status() === PHP_SESSION_NONE) {
       </ul>
     </nav>
   </header>
+
+  <?php
+  // Debug-Indikator (am unteren Rand fixiert) – sichtbar auf allen Frontend-Seiten
+  if ($debug_mode) {
+      echo "<div style='position: fixed; bottom: 0; left: 0; background: red; color: white; padding: 5px; z-index: 1000;'>Debug Mode ON</div>";
+  }
+  ?>
