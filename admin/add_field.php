@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <?php if (isset($error)): ?>
   <p style="color:red;"><?php echo $error; ?></p>
 <?php endif; ?>
-<form method="post" action="add_fields.php">
+<form method="post" action="add_field.php">
   <label for="description">Beschreibung:</label>
   <input type="text" name="description" id="description" required>
   <br>
