@@ -1,10 +1,16 @@
 <?php
-// admin/header.php
 session_start();
+
+// Prüfen, ob ein Admin eingeloggt ist
 if (!isset($_SESSION['user']) || !$_SESSION['user']['is_admin']) {
     header("Location: ../login.php");
     exit;
 }
+
+// Datenbank- und Debug-Einstellungen einbinden
+include '../db.php';
+include '../settings.php';
+$debug_mode = get_debug_mode($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -29,6 +35,17 @@ if (!isset($_SESSION['user']) || !$_SESSION['user']['is_admin']) {
     .sidebar li {
       margin: 10px 0;
     }
+    /* Debug-Indikator, fixiert am unteren rechten Rand */
+    .debug-indicator {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      background-color: red;
+      color: white;
+      padding: 5px;
+      font-size: 0.8em;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -39,9 +56,16 @@ if (!isset($_SESSION['user']) || !$_SESSION['user']['is_admin']) {
       <li><a href="users.php">Benutzerverwaltung</a></li>
       <li><a href="clubs.php">Vereine</a></li>
       <li><a href="teams.php">Teams</a></li>
-      <li><a href="games.php">Spiele</a></li> <!-- Neuer Menüpunkt -->
+      <li><a href="games.php">Spiele</a></li>
       <li><a href="bingofields.php">Bingo Felder</a></li>
       <li><a href="suggestions.php">Vorschläge</a></li>
+      <li><a href="debug_settings.php">Debug Einstellungen</a></li>
     </ul>
   </div>
   <div class="content">
+    <?php
+    // Falls der Debug-Modus aktiviert ist, wird ein Hinweis eingeblendet
+    if ($debug_mode) {
+        echo '<div class="debug-indicator">Debug Mode ON</div>';
+    }
+    ?>
