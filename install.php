@@ -1,6 +1,25 @@
 <?php
 // install.php – Installationsassistent für die Datenbankkonfiguration, Tabellenerstellung,
-// Admin-Konto-Anlage, Debug-Einstellungen und Einfügen von 50 Standard-Bingo-Feldern.
+// Admin-Konto-Anlage, Debug-Einstellungen, Standard-Bingo-Felder und einen Installationsmarker.
+
+// Zunächst prüfen, ob bereits eine Installation erfolgt ist:
+if (file_exists('config.php')) {
+    include 'config.php';
+    try {
+        $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        // Prüfe, ob der Eintrag 'installation_done' in der Tabelle settings vorhanden ist
+        $stmt = $pdo->prepare("SELECT value FROM settings WHERE name = 'installation_done'");
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($result && $result['value'] === '1') {
+            echo "<p>Installation wurde bereits durchgeführt. Bitte entfernen Sie die install.php aus dem System.</p>";
+            exit;
+        }
+    } catch (PDOException $e) {
+        // Falls keine Verbindung aufgebaut werden kann, wird die Installation fortgesetzt.
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Aus dem Formular erhaltene Werte
@@ -80,14 +99,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             name VARCHAR(100)
         )");
         
-        // Tabelle "settings" anlegen für globale Einstellungen (z. B. Debug-Modus)
+        // Tabelle "settings" anlegen für globale Einstellungen (z. B. Debug-Modus, Installationsstatus)
         $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) UNIQUE,
             value VARCHAR(100)
         )");
         
-        // Standardwert für debug_mode in settings einfügen (falls noch nicht vorhanden)
+        // Standardwert für debug_mode einfügen (falls noch nicht vorhanden)
         $pdo->exec("INSERT INTO settings (name, value)
             VALUES ('debug_mode', '0')
             ON DUPLICATE KEY UPDATE value='0'");
@@ -114,6 +133,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($standardFields as $field) {
             $stmtInsert->execute([$field]);
         }
+        
+        // Installationsmarker setzen: Eintrag "installation_done" in der Tabelle settings
+        $pdo->exec("INSERT INTO settings (name, value)
+            VALUES ('installation_done', '1')
+            ON DUPLICATE KEY UPDATE value='1'");
         
         $message = "Installation erfolgreich abgeschlossen!";
     } catch (PDOException $e) {
