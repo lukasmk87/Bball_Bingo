@@ -1,5 +1,5 @@
 <?php
-// admin/add_fields.php
+// admin/add_field.php
 include 'header.php';
 include '../db.php';
 
