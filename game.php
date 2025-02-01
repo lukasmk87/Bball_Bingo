@@ -1,13 +1,11 @@
 <?php
 session_start();
 include 'db.php';
-include 'settings.php';
 
-// Debug-Modus aus der Datenbank abfragen
-$debug = get_debug_mode($pdo);
+$debug = true; // Debug-Modus: true = Debug-Ausgaben in das Error-Log, false = keine Debug-Ausgaben
 $errorMessage = "";
 
-// Formularverarbeitung (muss vor jeglicher Ausgabe erfolgen, damit header()-Redirect funktioniert)
+// Formularverarbeitung: Diese Logik erfolgt vor jeglicher Ausgabe, um Header-Redirects zu ermöglichen.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['club']) && !empty($_POST['team']) && !empty($_POST['game'])) {
         $_SESSION['club_id'] = $_POST['club'];
