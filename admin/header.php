@@ -1,7 +1,6 @@
 <?php
 // admin/header.php
 session_start();
-// Prüfen, ob ein Admin eingeloggt ist
 if (!isset($_SESSION['user']) || !$_SESSION['user']['is_admin']) {
     header("Location: ../login.php");
     exit;
@@ -40,6 +39,7 @@ if (!isset($_SESSION['user']) || !$_SESSION['user']['is_admin']) {
       <li><a href="users.php">Benutzerverwaltung</a></li>
       <li><a href="clubs.php">Vereine</a></li>
       <li><a href="teams.php">Teams</a></li>
+      <li><a href="games.php">Spiele</a></li> <!-- Neuer Menüpunkt -->
       <li><a href="bingofields.php">Bingo Felder</a></li>
       <li><a href="suggestions.php">Vorschläge</a></li>
     </ul>
