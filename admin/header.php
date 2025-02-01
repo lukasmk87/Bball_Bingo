@@ -57,16 +57,18 @@ $debug_mode = get_debug_mode($pdo);
       <li><a href="clubs.php">Vereine</a></li>
       <li><a href="teams.php">Teams</a></li>
       <li><a href="games.php">Spiele</a></li>
-	  <li><a href="export_games.php">CSV Export Spiele</a></li>
-	  <li><a href="import_games.php">CSV Import Spiele</a></li>
+	  <li><a href="export_game.php">CSV Export Spiele</a></li>
+	  <li><a href="import_game.php">CSV Import Spiele</a></li>
       <li><a href="bingofields.php">Bingo Felder</a></li>
       <li><a href="suggestions.php">Vorschläge</a></li>
       <li><a href="debug_settings.php">Debug Einstellungen</a></li>
+      <!-- Neuer Link zum Frontend -->
+      <li><a href="../index.php">Zum Frontend</a></li>
     </ul>
   </div>
   <div class="content">
     <?php
-    // Falls der Debug-Modus aktiviert ist, wird ein Hinweis eingeblendet
+    // Debug-Indikator anzeigen, wenn der Debug-Modus aktiviert ist
     if ($debug_mode) {
         echo '<div class="debug-indicator">Debug Mode ON</div>';
     }
