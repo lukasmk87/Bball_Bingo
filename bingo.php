@@ -43,11 +43,13 @@ shuffle($fields);
 
 if ($debug) {
     echo "<!-- Debug: finale Felder count: " . count($fields) . " -->";
+    echo "<!-- Debug: finale Felder: " . print_r($fields, true) . " -->";
 }
 ?>
 <main>
   <h1>Bingo Spiel - Viertel: <span id="quarter">1</span></h1>
-  <div id="bingo-board">
+  <!-- Der Container wird relativ positioniert, damit der Banner (absolute Positionierung) korrekt angezeigt wird -->
+  <div id="bingo-board" style="position: relative;">
     <?php 
     for ($i = 0; $i < 25; $i++):
       $fieldText = isset($fields[$i]) ? $fields[$i]['description'] : 'Feld ' . ($i + 1);
@@ -58,6 +60,7 @@ if ($debug) {
   <button id="next-quarter" onclick="nextQuarter()">Nächstes Viertel</button>
 </main>
 <script>
+// Flag, um zu verhindern, dass mehrfach ein Bingo registriert wird
 var bingoAchieved = false;
 var quarter = 1;
 
@@ -132,11 +135,20 @@ function checkBingo() {
   }
   
   if (bingoAchieved) {
-    // In der Mitte (Zelle mit Index 12) "Bingo" anzeigen
-    var centerCell = document.querySelectorAll('.bingo-cell')[12];
-    centerCell.innerText = "Bingo";
-    // Ergebnis in Scoreboard eintragen
+    showBingoBanner();
     recordBingo();
+  }
+}
+
+function showBingoBanner() {
+  // Erstelle einen Banner, der quer über das Spielfeld angezeigt wird
+  var board = document.getElementById('bingo-board');
+  var banner = document.getElementById('bingo-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'bingo-banner';
+    banner.innerText = "Bingo";
+    board.appendChild(banner);
   }
 }
 
@@ -168,21 +180,25 @@ function nextQuarter() {
   if (quarter < 4) {
     quarter++;
     document.getElementById('quarter').innerText = quarter;
-    // Für das nächste Viertel: Rücksetzen der Bingo-Überprüfung
+    // Zurücksetzen für das nächste Viertel
     bingoAchieved = false;
-    // Hier können auch die aktiven Zustände zurückgesetzt werden (je nach Spielregel)
+    // Entferne den Bingo-Banner, falls vorhanden
+    var banner = document.getElementById('bingo-banner');
+    if (banner) {
+      banner.parentNode.removeChild(banner);
+    }
+    // Entferne alle aktiven Markierungen (kann je nach Regel variieren)
     document.querySelectorAll('.bingo-cell').forEach(function(cell) {
       cell.classList.remove('active');
-      // Optional: Den ursprünglichen Text wiederherstellen (wenn gewünscht)
-      // Hier wird angenommen, dass der ursprüngliche Text nicht dynamisch wiederhergestellt wird.
     });
   } else {
     alert("Spiel vorbei!");
-    // Hier kann abschließende Logik (z. B. Endauswertung) implementiert werden.
+    // Hier kann abschließende Logik implementiert werden.
   }
 }
 </script>
 <style>
+  /* Grid-Stile für das Bingo-Feld */
   #bingo-board {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -199,9 +215,24 @@ function nextQuarter() {
     text-align: center;
     padding: 5px;
     box-sizing: border-box;
+    background-color: #fff;
   }
   .bingo-cell.active {
-    background-color: yellow;
+    background-color: #ffff99;
+  }
+  /* Bingo-Banner, das quer über das Feld angezeigt wird */
+  #bingo-banner {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    transform: translateY(-50%);
+    background-color: #ff6666;
+    color: #fff;
+    text-align: center;
+    font-size: 3em;
+    padding: 10px;
+    z-index: 10;
   }
 </style>
 <?php include 'footer.php'; ?>
