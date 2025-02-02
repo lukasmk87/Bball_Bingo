@@ -2,12 +2,11 @@
 session_start();
 
 // Prüfen, ob ein Admin eingeloggt ist
-if (!isset($_SESSION['user']) || !$_SESSION['user']['is_admin']) {
+if (!isset($_SESSION['user']) || !isset($_SESSION['user']['is_admin']) || $_SESSION['user']['is_admin'] != 1) {
     header("Location: ../login.php");
     exit;
 }
 
-// Datenbank- und Debug-Einstellungen einbinden
 include '../db.php';
 include '../settings.php';
 $debug_mode = get_debug_mode($pdo);
@@ -18,35 +17,8 @@ $debug_mode = get_debug_mode($pdo);
   <meta charset="UTF-8">
   <title>Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="../style.css">
-  <style>
-    /* Sidebar-Stile für das Admin-Dashboard */
-    .sidebar {
-      width: 200px;
-      float: left;
-    }
-    .content {
-      margin-left: 210px;
-    }
-    .sidebar ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    .sidebar li {
-      margin: 10px 0;
-    }
-    /* Debug-Indikator, fixiert am unteren rechten Rand */
-    .debug-indicator {
-      position: fixed;
-      bottom: 0;
-      right: 0;
-      background-color: red;
-      color: white;
-      padding: 5px;
-      font-size: 0.8em;
-      z-index: 1000;
-    }
-  </style>
+  <!-- Zentrale CSS für den Admin-Bereich -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="sidebar">
@@ -57,19 +29,19 @@ $debug_mode = get_debug_mode($pdo);
       <li><a href="clubs.php">Vereine</a></li>
       <li><a href="teams.php">Teams</a></li>
       <li><a href="games.php">Spiele</a></li>
-	  <li><a href="export_game.php">CSV Export Spiele</a></li>
-	  <li><a href="import_game.php">CSV Import Spiele</a></li>
       <li><a href="bingofields.php">Bingo Felder</a></li>
       <li><a href="suggestions.php">Vorschläge</a></li>
-	  <li><a href="scoreboard.php">Scoreboard Verwaltung</a></li>
+      <li><a href="statistics.php">Statistiken</a></li>
       <li><a href="debug_settings.php">Debug Einstellungen</a></li>
-      <!-- Neuer Link zum Frontend -->
+      <li><a href="site_settings.php">Einstellungen</a></li>
       <li><a href="../index.php">Zum Frontend</a></li>
+      <li><a href="export_game.php">CSV Export Spiele</a></li>
+      <li><a href="import_game.php">CSV Import Spiele</a></li>
     </ul>
   </div>
   <div class="content">
     <?php
-    // Debug-Indikator anzeigen, wenn der Debug-Modus aktiviert ist
+    // Falls der Debug-Modus aktiviert ist, wird ein Debug-Indikator eingeblendet
     if ($debug_mode) {
         echo '<div class="debug-indicator">Debug Mode ON</div>';
     }
