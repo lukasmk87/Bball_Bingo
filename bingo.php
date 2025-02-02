@@ -3,81 +3,46 @@ session_start();
 include 'db.php';
 include 'header.php';
 
-$debug = true; // Debug-Modus: true = Debug-Ausgaben, false = keine Debug-Ausgaben
-
-// Prüfe, ob ein Team ausgewählt wurde
+// Überprüfen, ob ein Team ausgewählt wurde
 if (!isset($_SESSION['team_id'])) {
-    if ($debug) {
-        echo "<!-- Debug: Kein Team ausgewählt. Session: " . var_export($_SESSION, true) . " -->";
-    }
     echo "<p>Kein Team ausgewählt. Bitte wähle zuerst ein Team im Spiel-Auswahlbereich.</p>";
     exit;
-}
-
-$team_id = $_SESSION['team_id'];
-
-// Lade teambezogene Bingo-Felder
-$stmt = $pdo->prepare("SELECT * FROM bingo_fields WHERE team_id = ? AND approved = 1");
-$stmt->execute([$team_id]);
-$teamFields = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-if ($debug) {
-    echo "<!-- Debug: teamFields count: " . count($teamFields) . " -->";
-}
-
-// Falls weniger als 25 teambezogene Felder vorhanden sind, Standardfelder laden
-if (count($teamFields) < 25) {
-    $stmt = $pdo->prepare("SELECT * FROM bingo_fields WHERE is_standard = 1 AND approved = 1");
-    $stmt->execute();
-    $standardFields = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    if ($debug) {
-        echo "<!-- Debug: standardFields count: " . count($standardFields) . " -->";
-    }
-    $fields = array_merge($teamFields, $standardFields);
-    $fields = array_slice($fields, 0, 25);
-} else {
-    $fields = array_slice($teamFields, 0, 25);
-}
-
-shuffle($fields);
-
-if ($debug) {
-    echo "<!-- Debug: finale Felder count: " . count($fields) . " -->";
-    echo "<!-- Debug: finale Felder: " . print_r($fields, true) . " -->";
 }
 ?>
 <main>
   <h1>Bingo Spiel - Viertel: <span id="quarter">1</span></h1>
-  <!-- Der Container wird relativ positioniert, damit der Banner (absolute Positionierung) korrekt angezeigt wird -->
+  <!-- Container für das Bingo-Feld -->
   <div id="bingo-board" style="position: relative;">
-    <?php 
-    for ($i = 0; $i < 25; $i++):
-      $fieldText = isset($fields[$i]) ? $fields[$i]['description'] : 'Feld ' . ($i + 1);
+    <?php
+      // Initiales Laden der Bingo-Felder über fetch_bingo_fields.php
+      include 'fetch_bingo_fields.php';
     ?>
-      <div class="bingo-cell" onclick="toggleActive(this)"><?php echo htmlspecialchars($fieldText); ?></div>
-    <?php endfor; ?>
   </div>
   <button id="next-quarter" onclick="nextQuarter()">Nächstes Viertel</button>
 </main>
 <script>
-// Flag, um zu verhindern, dass mehrfach ein Bingo registriert wird
-var bingoAchieved = false;
+// Globale Variablen zur Kumulierung (optional)
 var quarter = 1;
+var cumulativeActivatedFields = 0;
+var cumulativeBingos = 0;
+var bingoAchieved = false; // Flag: ob im aktuellen Viertel bereits ein Bingo erzielt wurde
 
+// Umschalten der aktiven Zellen
 function toggleActive(cell) {
   cell.classList.toggle('active');
   checkBingo();
 }
 
+// Prüft, ob in der aktuellen 5x5-Matrix ein Bingo (komplette Reihe, Spalte oder Diagonale) erzielt wurde
 function checkBingo() {
-  if (bingoAchieved) return; // Gewinn wurde bereits ermittelt
+  if (bingoAchieved) return; // Bereits registriert
   var cells = document.querySelectorAll('.bingo-cell');
   var board = [];
   for (var i = 0; i < cells.length; i++) {
     board.push(cells[i].classList.contains('active'));
   }
   
-  // Prüfe alle 5 Reihen
+  // Prüfe Reihen
   for (var r = 0; r < 5; r++) {
     var rowWin = true;
     for (var c = 0; c < 5; c++) {
@@ -91,7 +56,7 @@ function checkBingo() {
       break;
     }
   }
-  // Prüfe alle 5 Spalten
+  // Prüfe Spalten
   if (!bingoAchieved) {
     for (var c = 0; c < 5; c++) {
       var colWin = true;
@@ -107,7 +72,7 @@ function checkBingo() {
       }
     }
   }
-  // Prüfe Diagonale (oben links → unten rechts)
+  // Prüfe Diagonalen
   if (!bingoAchieved) {
     var diagWin1 = true;
     for (var i = 0; i < 5; i++) {
@@ -120,7 +85,6 @@ function checkBingo() {
       bingoAchieved = true;
     }
   }
-  // Prüfe Diagonale (oben rechts → unten links)
   if (!bingoAchieved) {
     var diagWin2 = true;
     for (var i = 0; i < 5; i++) {
@@ -135,13 +99,15 @@ function checkBingo() {
   }
   
   if (bingoAchieved) {
+    // Optional: Du kannst hier den Text "Bingo" in einer speziellen Zelle anzeigen
     showBingoBanner();
-    recordBingo();
+    // Zähle den Bingo im aktuellen Viertel (einmal pro Viertel)
+    cumulativeBingos++;
   }
 }
 
+// Blendet einen Banner "Bingo" quer über das Spielfeld ein
 function showBingoBanner() {
-  // Erstelle einen Banner, der quer über das Spielfeld angezeigt wird
   var board = document.getElementById('bingo-board');
   var banner = document.getElementById('bingo-banner');
   if (!banner) {
@@ -152,6 +118,7 @@ function showBingoBanner() {
   }
 }
 
+// Zählt die aktivierten Felder im aktuellen Viertel
 function countActiveFields() {
   var cells = document.querySelectorAll('.bingo-cell');
   var count = 0;
@@ -163,8 +130,107 @@ function countActiveFields() {
   return count;
 }
 
-function recordBingo() {
-  var activeCount = countActiveFields();
+// Lädt neue Bingo-Felder per AJAX
+function loadNewFields() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', 'fetch_bingo_fields.php', true);
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      document.getElementById('bingo-board').innerHTML = xhr.responseText;
+      // Reset Bingo-Flag
+      bingoAchieved = false;
+    } else {
+      console.error("Fehler beim Laden der neuen Bingo-Felder.");
+    }
+  };
+  xhr.send();
+}
+
+// Zeigt Optionen für Spielabschluss oder Verlängerung an, wenn das 4. Viertel erreicht ist
+function showEndGameOptions() {
+  var overlay = document.createElement('div');
+  overlay.id = "endGameOverlay";
+  overlay.style.position = "fixed";
+  overlay.style.top = "0";
+  overlay.style.left = "0";
+  overlay.style.width = "100%";
+  overlay.style.height = "100%";
+  overlay.style.backgroundColor = "rgba(0,0,0,0.7)";
+  overlay.style.display = "flex";
+  overlay.style.flexDirection = "column";
+  overlay.style.justifyContent = "center";
+  overlay.style.alignItems = "center";
+  overlay.style.zIndex = "1000";
+  
+  var message = document.createElement('p');
+  message.style.color = "#fff";
+  message.style.fontSize = "1.5em";
+  message.style.marginBottom = "20px";
+  message.innerText = "4. Viertel abgeschlossen. Bitte wählen Sie:";
+  overlay.appendChild(message);
+  
+  var btnContainer = document.createElement('div');
+  btnContainer.style.display = "flex";
+  btnContainer.style.gap = "20px";
+  
+  var btnEnd = document.createElement('button');
+  btnEnd.innerText = "Spiel beendet";
+  btnEnd.style.padding = "10px 20px";
+  btnEnd.style.fontSize = "1em";
+  btnEnd.onclick = function() {
+    document.body.removeChild(overlay);
+    recordFinalScore();
+    alert("Spiel vorbei!");
+    window.location.href = "scoreboard.php";
+  };
+  
+  var btnExt = document.createElement('button');
+  btnExt.innerText = "Verlängerung";
+  btnExt.style.padding = "10px 20px";
+  btnExt.style.fontSize = "1em";
+  btnExt.onclick = function() {
+    document.body.removeChild(overlay);
+    quarter++; // Erhöhe die Viertelzahl (jetzt 5, Verlängerung)
+    document.getElementById('quarter').innerText = quarter;
+    loadNewFields();
+  };
+  
+  btnContainer.appendChild(btnEnd);
+  btnContainer.appendChild(btnExt);
+  overlay.appendChild(btnContainer);
+  
+  document.body.appendChild(overlay);
+}
+
+// Beim Klick auf "Nächstes Viertel" wird geprüft, ob ein Ende erreicht wurde oder ob ein neues Viertel gestartet wird.
+function nextQuarter() {
+  // Zähle die aktivierten Felder des aktuellen Viertels und addiere sie zu den kumulierten Werten
+  cumulativeActivatedFields += countActiveFields();
+  
+  if (quarter < 4) {
+    quarter++;
+    document.getElementById('quarter').innerText = quarter;
+    loadNewFields();
+  } else if (quarter === 4) {
+    // Am Ende des 4. Viertels: Optionen anzeigen
+    showEndGameOptions();
+  } else if (quarter === 5) {
+    // Bei Verlängerung (5. Viertel) wird das Spiel nach Abschluss beendet
+    cumulativeActivatedFields += countActiveFields(); // Erneut Felder zählen, falls noch Änderungen vorliegen
+    recordFinalScore();
+    alert("Spiel vorbei!");
+    window.location.href = "scoreboard.php";
+  }
+}
+
+// Sendet die finalen Ergebnisse (kumulative aktivierte Felder, Bingos, Gewinnquote und Feldquote) an update_scoreboard.php
+function recordFinalScore() {
+  // Gewinnquote: (Gesamtzahl Bingos / 4) * 100, bei Verlängerung werden alle Viertel zusammen gerechnet (z.B. 5 Viertel)
+  var totalQuarters = quarter; // kann 4 oder 5 sein
+  var win_rate = (cumulativeBingos / totalQuarters) * 100;
+  // Feldquote: (Gesamtzahl aktivierter Felder / (25 * totalQuarters)) * 100
+  var field_rate = (cumulativeActivatedFields / (25 * totalQuarters)) * 100;
+  
   var xhr = new XMLHttpRequest();
   xhr.open('POST', 'update_scoreboard.php', true);
   xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
@@ -173,28 +239,10 @@ function recordBingo() {
       console.log("Scoreboard updated: " + xhr.responseText);
     }
   };
-  xhr.send('active_fields=' + activeCount + '&bingos=1');
-}
-
-function nextQuarter() {
-  if (quarter < 4) {
-    quarter++;
-    document.getElementById('quarter').innerText = quarter;
-    // Zurücksetzen für das nächste Viertel
-    bingoAchieved = false;
-    // Entferne den Bingo-Banner, falls vorhanden
-    var banner = document.getElementById('bingo-banner');
-    if (banner) {
-      banner.parentNode.removeChild(banner);
-    }
-    // Entferne alle aktiven Markierungen (kann je nach Regel variieren)
-    document.querySelectorAll('.bingo-cell').forEach(function(cell) {
-      cell.classList.remove('active');
-    });
-  } else {
-    alert("Spiel vorbei!");
-    // Hier kann abschließende Logik implementiert werden.
-  }
+  xhr.send('active_fields=' + cumulativeActivatedFields + 
+           '&bingos=' + cumulativeBingos + 
+           '&win_rate=' + win_rate + 
+           '&field_rate=' + field_rate);
 }
 </script>
 <style>
@@ -216,11 +264,12 @@ function nextQuarter() {
     padding: 5px;
     box-sizing: border-box;
     background-color: #fff;
+    cursor: pointer;
   }
   .bingo-cell.active {
     background-color: #ffff99;
   }
-  /* Bingo-Banner, das quer über das Feld angezeigt wird */
+  /* Banner, der bei Bingo angezeigt wird */
   #bingo-banner {
     position: absolute;
     top: 50%;
@@ -233,6 +282,10 @@ function nextQuarter() {
     font-size: 3em;
     padding: 10px;
     z-index: 10;
+  }
+  /* Overlay für Endspiel-Optionen */
+  #endGameOverlay {
+    font-family: Arial, sans-serif;
   }
 </style>
 <?php include 'footer.php'; ?>

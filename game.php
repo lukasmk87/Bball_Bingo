@@ -1,16 +1,28 @@
 <?php
 session_start();
 include 'db.php';
+include 'settings.php';
 
-$debug = true; // Debug-Modus: true = Debug-Ausgaben in das Error-Log, false = keine Debug-Ausgaben
+$debug = get_debug_mode($pdo);
 $errorMessage = "";
 
-// Formularverarbeitung: Diese Logik erfolgt vor jeglicher Ausgabe, um Header-Redirects zu ermöglichen.
+// Formularverarbeitung – muss vor jeglicher Ausgabe erfolgen
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['club']) && !empty($_POST['team']) && !empty($_POST['game'])) {
         $_SESSION['club_id'] = $_POST['club'];
         $_SESSION['team_id'] = $_POST['team'];
         $_SESSION['game_id'] = $_POST['game'];
+        
+        // Erhöhe den globalen Spiele-Zähler
+        $stmt = $pdo->prepare("UPDATE global_stats SET games_played = games_played + 1 WHERE id = 1");
+        $stmt->execute();
+        
+        // Aktualisiere die spielbezogenen Statistiken:
+        $game_id = $_POST['game'];
+        $stmt = $pdo->prepare("INSERT INTO game_stats (game_id, play_count) VALUES (?, 1)
+            ON DUPLICATE KEY UPDATE play_count = play_count + 1");
+        $stmt->execute([$game_id]);
+        
         if ($debug) {
             error_log("DEBUG: Session gesetzt: " . print_r($_SESSION, true));
         }
@@ -26,13 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include 'header.php';
 
-// Lade alle Vereine aus der Datenbank für die Auswahl
+// Vereine laden (wie gehabt)
 $stmt = $pdo->query("SELECT * FROM clubs");
 $clubs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-if ($debug) {
-    error_log("DEBUG: clubs count: " . count($clubs));
-    error_log("DEBUG: clubs: " . print_r($clubs, true));
-}
 ?>
 <main>
   <h1>Spiel Auswahl</h1>
@@ -80,7 +88,6 @@ function fetchTeams(clubId) {
   };
   xhr.send();
 }
-
 function fetchGames(teamId) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'fetch_games.php?team_id=' + teamId, true);
