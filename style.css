@@ -1,39 +1,106 @@
-/* style.css */
+/* Grundlegende Reset- und Basis-Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
+  line-height: 1.6;
+  background: #f4f4f4;
+  color: #333;
 }
+
+/* Header (Frontend) */
 header {
-  background-color: #333;
+  background: #333;
   color: #fff;
-  padding: 10px;
-}
-header nav ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  padding: 10px 20px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
 }
-header nav li {
-  margin-right: 15px;
+
+header h1 {
+  font-size: 1.5em;
 }
-header nav a {
+
+/* Navigation */
+nav ul {
+  display: flex;
+  list-style: none;
+}
+
+nav ul li {
+  margin-left: 20px;
+}
+
+nav ul li a {
   color: #fff;
   text-decoration: none;
 }
+
+/* Hamburger-Symbol: Standardmäßig ausgeblendet */
+.hamburger {
+  display: none;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+/* Responsive Styles: Für Bildschirme bis 768px */
+@media only screen and (max-width: 768px) {
+  /* Hamburger-Symbol anzeigen */
+  .hamburger {
+    display: block;
+  }
+  /* Navigation als Spalte, standardmäßig ausgeblendet */
+  nav ul {
+    flex-direction: column;
+    position: absolute;
+    top: 60px; /* Höhe des Headers */
+    left: 0;
+    right: 0;
+    background: #333;
+    display: none;
+    margin: 0;
+    padding: 0;
+  }
+  /* Wenn aktiv: Navigation anzeigen */
+  nav ul.active {
+    display: flex;
+  }
+  nav ul li {
+    margin: 10px 0;
+    text-align: center;
+  }
+}
+
+/* Main Content */
 main {
   padding: 20px;
 }
-table {
+
+/* Footer */
+footer {
+  background: #333;
+  color: #fff;
+  text-align: center;
+  padding: 10px;
+  position: relative;
+  bottom: 0;
   width: 100%;
-  border-collapse: collapse;
-  margin: 20px 0;
 }
-table, th, td {
-  border: 1px solid #ddd;
-}
-th, td {
-  padding: 8px;
-  text-align: left;
+
+/* Debug-Indikator (z.B. im Admin-Bereich) */
+.debug-indicator {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  background: red;
+  color: white;
+  padding: 5px;
+  font-size: 0.8em;
+  z-index: 1000;
 }

@@ -1,14 +1,9 @@
 <?php
 // header.php (Frontend)
-// Session starten, falls noch nicht geschehen:
+// Diese Datei sollte im Hauptverzeichnis liegen, z. B. neben index.php, login.php, etc.
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-include 'db.php';
-include 'settings.php';
-
-// Debug-Modus aus der Datenbank abfragen
-$debug_mode = get_debug_mode($pdo);
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -17,12 +12,74 @@ $debug_mode = get_debug_mode($pdo);
   <title>Bingo Basketball</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Grundlegende Styles für den Header und Navigation */
+    header {
+      background: #333;
+      color: #fff;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5em;
+    }
+    nav ul {
+      display: flex;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav ul li {
+      margin-left: 20px;
+    }
+    nav ul li a {
+      color: #fff;
+      text-decoration: none;
+    }
+    /* Hamburger-Symbol (zunächst versteckt) */
+    .hamburger {
+      display: none;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+    /* Responsive Styles: Bei kleineren Bildschirmen als Hamburger-Menü */
+    @media only screen and (max-width: 768px) {
+      nav ul {
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background: #333;
+        display: none;
+        margin: 0;
+        padding: 0;
+      }
+      nav ul.active {
+        display: flex;
+      }
+      nav ul li {
+        margin: 10px 0;
+        text-align: center;
+      }
+      .hamburger {
+        display: block;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
+    <h1>Bingo Basketball</h1>
+    <div class="hamburger" onclick="toggleNav()">&#9776;</div>
     <nav>
-      <ul>
-        <li><a href="index.php">Home</a></li>
+      <ul id="navLinks">
+		<li><a href="index.php">Home</a></li>
+		<li><a href="anleitung.php">Anleitung</a></li>
         <li><a href="login.php">Login</a></li>
         <li><a href="register.php">Registrieren</a></li>
         <li><a href="guest.php">Als Gast spielen</a></li>
@@ -34,10 +91,14 @@ $debug_mode = get_debug_mode($pdo);
       </ul>
     </nav>
   </header>
-
-  <?php
-  // Debug-Indikator (am unteren Rand fixiert) – sichtbar auf allen Frontend-Seiten
-  if ($debug_mode) {
-      echo "<div style='position: fixed; bottom: 0; left: 0; background: red; color: white; padding: 5px; z-index: 1000;'>Debug Mode ON</div>";
-  }
-  ?>
+  <script>
+    function toggleNav() {
+      var navLinks = document.getElementById('navLinks');
+      navLinks.classList.toggle('active');
+    }
+    // Standardmäßig soll das Menü im mobilen Modus zugeklappt sein
+    document.addEventListener("DOMContentLoaded", function() {
+      var navLinks = document.getElementById('navLinks');
+      navLinks.classList.remove('active');
+    });
+  </script>
