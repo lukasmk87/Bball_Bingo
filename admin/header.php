@@ -61,6 +61,7 @@ $debug_mode = get_debug_mode($pdo);
 	  <li><a href="import_game.php">CSV Import Spiele</a></li>
       <li><a href="bingofields.php">Bingo Felder</a></li>
       <li><a href="suggestions.php">Vorschläge</a></li>
+	  <li><a href="scoreboard.php">Scoreboard Verwaltung</a></li>
       <li><a href="debug_settings.php">Debug Einstellungen</a></li>
       <!-- Neuer Link zum Frontend -->
       <li><a href="../index.php">Zum Frontend</a></li>
