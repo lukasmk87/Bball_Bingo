@@ -1,121 +1,161 @@
 <?php
-// install.php – Installationsassistent für die Datenbankkonfiguration, Tabellenerstellung,
-// Admin-Konto-Anlage, Debug-Einstellungen, Standard-Bingo-Felder und einen Installationsmarker.
+// install.php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
-// Zunächst prüfen, ob bereits eine Installation erfolgt ist:
-if (file_exists('config.php')) {
-    include 'config.php';
-    try {
-        $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        // Prüfe, ob der Eintrag 'installation_done' in der Tabelle settings vorhanden ist
-        $stmt = $pdo->prepare("SELECT value FROM settings WHERE name = 'installation_done'");
-        $stmt->execute();
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($result && $result['value'] === '1') {
-            echo "<p>Installation wurde bereits durchgeführt. Bitte entfernen Sie die install.php aus dem System.</p>";
-            exit;
-        }
-    } catch (PDOException $e) {
-        // Falls keine Verbindung aufgebaut werden kann, wird die Installation fortgesetzt.
-    }
+// Prüfen, ob die Installation bereits durchgeführt wurde
+$installLockFile = 'install.lock';
+if (file_exists($installLockFile)) {
+    echo "Die Installation wurde bereits durchgeführt. Um neu zu installieren, löschen Sie bitte die Datei 'install.lock'.";
+    exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Aus dem Formular erhaltene Werte
-    $db_host = $_POST['db_host'];
-    $db_name = $_POST['db_name'];
-    $db_user = $_POST['db_user'];
-    $db_pass = $_POST['db_pass'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Formular-Daten abrufen
+    $dbHost     = trim($_POST['db_host']);
+    $dbName     = trim($_POST['db_name']);
+    $dbUser     = trim($_POST['db_user']);
+    $dbPass     = trim($_POST['db_pass']);
+    $adminUser  = trim($_POST['admin_user']);
+    $adminEmail = trim($_POST['admin_email']);
+    $adminPass  = $_POST['admin_pass'];
     
-    $admin_username = $_POST['admin_username'];
-    $admin_password = password_hash($_POST['admin_password'], PASSWORD_DEFAULT);
-    
-    // Speichern der Datenbankkonfiguration in config.php
-    $configContent = "<?php\n";
-    $configContent .= "// Datenbankkonfiguration\n";
-    $configContent .= "define('DB_HOST', '$db_host');\n";
-    $configContent .= "define('DB_NAME', '$db_name');\n";
-    $configContent .= "define('DB_USER', '$db_user');\n";
-    $configContent .= "define('DB_PASS', '$db_pass');\n";
-    $configContent .= "?>";
-    file_put_contents('config.php', $configContent);
-    
-    // Verbindung zur Datenbank herstellen
+    // Datenbankverbindung herstellen
+    $dsn = "mysql:host=$dbHost;dbname=$dbName;charset=utf8mb4";
     try {
-        $pdo = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
+        $pdo = new PDO($dsn, $dbUser, $dbPass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        
-        // Tabellen erstellen
-        $pdo->exec("CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(50) UNIQUE,
-            password VARCHAR(255),
-            is_admin TINYINT(1) DEFAULT 0,
-            blocked TINYINT(1) DEFAULT 0
-        )");
-        
-        $pdo->exec("CREATE TABLE IF NOT EXISTS clubs (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100),
-            blocked TINYINT(1) DEFAULT 0
-        )");
-        
-        $pdo->exec("CREATE TABLE IF NOT EXISTS teams (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            club_id INT,
-            name VARCHAR(100),
-            blocked TINYINT(1) DEFAULT 0
-        )");
-        
-        $pdo->exec("CREATE TABLE IF NOT EXISTS games (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            team_id INT,
-            opponent VARCHAR(100),
-            time DATETIME
-        )");
-        
-        $pdo->exec("CREATE TABLE IF NOT EXISTS bingo_fields (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            team_id INT DEFAULT NULL,
-            description VARCHAR(255),
-            is_standard TINYINT(1) DEFAULT 0,
-            approved TINYINT(1) DEFAULT 0
-        )");
-        
-        $pdo->exec("CREATE TABLE IF NOT EXISTS scoreboard (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(50),
-            game VARCHAR(100),
-            activated_fields INT,
-            bingos INT,
-            win_rate FLOAT,
-            field_rate FLOAT
-        )");
-        
-        $pdo->exec("CREATE TABLE IF NOT EXISTS suggestions (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            type VARCHAR(20),
-            name VARCHAR(100)
-        )");
-        
-        // Tabelle "settings" anlegen für globale Einstellungen (z. B. Debug-Modus, Installationsstatus)
-        $pdo->exec("CREATE TABLE IF NOT EXISTS settings (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) UNIQUE,
-            value VARCHAR(100)
-        )");
-        
-        // Standardwert für debug_mode einfügen (falls noch nicht vorhanden)
-        $pdo->exec("INSERT INTO settings (name, value)
-            VALUES ('debug_mode', '0')
-            ON DUPLICATE KEY UPDATE value='0'");
-        
-        // Admin-Benutzer anlegen
-        $stmt = $pdo->prepare("INSERT INTO users (username, password, is_admin) VALUES (?, ?, 1)");
-        $stmt->execute([$admin_username, $admin_password]);
-        
-        // 50 Standard-Bingo-Felder mit Basketball-Bezug einfügen
+    } catch(PDOException $e) {
+        echo "Verbindung fehlgeschlagen: " . htmlspecialchars($e->getMessage());
+        exit;
+    }
+    
+    // Array mit den SQL-Statements zur Erstellung aller Tabellen
+    $tables = [];
+    
+    // settings Tabelle – für systemweite Einstellungen (z. B. SMTP, Farbwerte, Version)
+    $tables[] = "CREATE TABLE IF NOT EXISTS settings (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         name VARCHAR(100) NOT NULL UNIQUE,
+         value TEXT DEFAULT NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // users Tabelle – Benutzer, inkl. E-Mail
+    $tables[] = "CREATE TABLE IF NOT EXISTS users (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         username VARCHAR(255) NOT NULL,
+         email VARCHAR(255) NOT NULL,
+         password VARCHAR(255) NOT NULL,
+         is_admin TINYINT(1) DEFAULT 0,
+         blocked TINYINT(1) DEFAULT 0,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // clubs Tabelle – Vereine
+    $tables[] = "CREATE TABLE IF NOT EXISTS clubs (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         name VARCHAR(255) NOT NULL,
+         blocked TINYINT(1) DEFAULT 0,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // teams Tabelle – Teams, mit Verweis auf clubs
+    $tables[] = "CREATE TABLE IF NOT EXISTS teams (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         club_id INT DEFAULT NULL,
+         name VARCHAR(255) NOT NULL,
+         blocked TINYINT(1) DEFAULT 0,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // games Tabelle – Spiele, mit Verweis auf teams
+    $tables[] = "CREATE TABLE IF NOT EXISTS games (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         team_id INT DEFAULT NULL,
+         opponent VARCHAR(255) NOT NULL,
+         time DATETIME NOT NULL,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // bingo_fields Tabelle – Bingo-Felder, optional mit Teamzuordnung
+    $tables[] = "CREATE TABLE IF NOT EXISTS bingo_fields (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         team_id INT DEFAULT NULL,
+         description TEXT NOT NULL,
+         is_standard TINYINT(1) DEFAULT 0,
+         approved TINYINT(1) DEFAULT 0,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // scoreboard Tabelle – Ergebnisse, mit Verweis auf das Spiel
+    $tables[] = "CREATE TABLE IF NOT EXISTS scoreboard (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         username VARCHAR(255) NOT NULL,
+         activated_fields INT DEFAULT 0,
+         bingos INT DEFAULT 0,
+         win_rate DECIMAL(5,2) DEFAULT 0,
+         field_rate DECIMAL(5,2) DEFAULT 0,
+         game INT DEFAULT NULL,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         FOREIGN KEY (game) REFERENCES games(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // suggestions Tabelle – Vorschläge, optional mit Teamzuordnung
+    $tables[] = "CREATE TABLE IF NOT EXISTS suggestions (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         type VARCHAR(50) NOT NULL,
+         name VARCHAR(255) NOT NULL,
+         approved TINYINT(1) DEFAULT 0,
+         team_id INT DEFAULT NULL,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // tickets Tabelle – Support-Tickets
+    $tables[] = "CREATE TABLE IF NOT EXISTS tickets (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         user_id INT DEFAULT NULL,
+         subject VARCHAR(255) NOT NULL,
+         message TEXT NOT NULL,
+         status ENUM('open','pending','closed') DEFAULT 'open',
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // bingo_log Tabelle – Protokoll der Bingo-Felder, die zum Gewinn geführt haben
+    $tables[] = "CREATE TABLE IF NOT EXISTS bingo_log (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         game_id INT NOT NULL,
+         winning_fields TEXT, -- JSON-kodiertes Array der Feld-IDs
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    
+    // Tabellen erstellen
+    try {
+        foreach ($tables as $sql) {
+            $pdo->exec($sql);
+        }
+    } catch (PDOException $e) {
+        echo "Fehler beim Erstellen der Tabellen: " . htmlspecialchars($e->getMessage());
+        exit;
+    }
+    
+    // Erstelle den Admin-Benutzer
+    $hashedPassword = password_hash($adminPass, PASSWORD_DEFAULT);
+    try {
+        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, is_admin) VALUES (?, ?, ?, 1)");
+        $stmt->execute([$adminUser, $adminEmail, $hashedPassword]);
+    } catch (PDOException $e) {
+        echo "Fehler beim Erstellen des Admin-Benutzers: " . htmlspecialchars($e->getMessage());
+        exit;
+    }
+    
+	// 50 Standard-Bingo-Felder mit Basketball-Bezug einfügen
         $standardFields = [
             "Dreier Treffer", "Zweier Treffer", "Freier Wurf Treffer", "Assist", "Offensiver Rebound",
             "Defensiver Rebound", "Steal", "Block", "Turnover", "Foul begangen",
@@ -133,55 +173,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($standardFields as $field) {
             $stmtInsert->execute([$field]);
         }
-        
-        // Installationsmarker setzen: Eintrag "installation_done" in der Tabelle settings
-        $pdo->exec("INSERT INTO settings (name, value)
-            VALUES ('installation_done', '1')
-            ON DUPLICATE KEY UPDATE value='1'");
-        
-        $message = "Installation erfolgreich abgeschlossen!";
-    } catch (PDOException $e) {
-        $error = "Fehler bei der Installation: " . $e->getMessage();
-    }
+    
+    // Erstelle eine Installations-Lock-Datei, um eine erneute Installation zu verhindern
+    file_put_contents($installLockFile, "Installation abgeschlossen am " . date("Y-m-d H:i:s"));
+    echo "Installation erfolgreich durchgeführt. Bitte löschen oder sichern Sie die Datei install.php.";
+    exit;
 }
 ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Installationsassistent</title>
+    <title>Installation – Basketball Bingo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Optional: CSS einbinden -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main>
-    <h1>Installationsassistent</h1>
-    <?php if (isset($message)): ?>
-        <p style="color:green;"><?php echo $message; ?></p>
-    <?php elseif (isset($error)): ?>
-        <p style="color:red;"><?php echo $error; ?></p>
-    <?php endif; ?>
+<main class="container">
+    <h1>Installation</h1>
     <form method="post" action="install.php">
-        <h2>Datenbank Konfiguration</h2>
-        <label for="db_host">Host:</label>
-        <input type="text" name="db_host" id="db_host" required value="localhost">
-        <br>
-        <label for="db_name">Datenbankname:</label>
-        <input type="text" name="db_name" id="db_name" required>
-        <br>
-        <label for="db_user">Benutzername:</label>
-        <input type="text" name="db_user" id="db_user" required>
-        <br>
-        <label for="db_pass">Passwort:</label>
-        <input type="password" name="db_pass" id="db_pass">
-        <br>
-        <h2>Admin Konto</h2>
-        <label for="admin_username">Admin Benutzername:</label>
-        <input type="text" name="admin_username" id="admin_username" required>
-        <br>
-        <label for="admin_password">Admin Passwort:</label>
-        <input type="password" name="admin_password" id="admin_password" required>
-        <br>
-        <input type="submit" value="Installation starten">
+        <h2>Datenbankverbindung</h2>
+        <div class="form-group">
+            <label for="db_host">Datenbank Host:</label>
+            <input type="text" id="db_host" name="db_host" required value="localhost">
+        </div>
+        <div class="form-group">
+            <label for="db_name">Datenbank Name:</label>
+            <input type="text" id="db_name" name="db_name" required>
+        </div>
+        <div class="form-group">
+            <label for="db_user">Datenbank Benutzer:</label>
+            <input type="text" id="db_user" name="db_user" required>
+        </div>
+        <div class="form-group">
+            <label for="db_pass">Datenbank Passwort:</label>
+            <input type="password" id="db_pass" name="db_pass" required>
+        </div>
+        
+        <h2>Admin-Benutzer erstellen</h2>
+        <div class="form-group">
+            <label for="admin_user">Admin Benutzername:</label>
+            <input type="text" id="admin_user" name="admin_user" required>
+        </div>
+        <div class="form-group">
+            <label for="admin_email">Admin E-Mail-Adresse:</label>
+            <input type="email" id="admin_email" name="admin_email" required>
+        </div>
+        <div class="form-group">
+            <label for="admin_pass">Admin Passwort:</label>
+            <input type="password" id="admin_pass" name="admin_pass" required>
+        </div>
+        
+        <div class="actions">
+            <input type="submit" value="Installation starten">
+        </div>
     </form>
 </main>
 </body>

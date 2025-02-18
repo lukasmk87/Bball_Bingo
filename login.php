@@ -1,38 +1,60 @@
 <?php
 session_start();
 include 'db.php';
+include 'header.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+$message = "";
+$error = "";
 
-    // Benutzer anhand des Benutzernamens laden
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Eingaben trimmen
+    $login = trim($_POST["login"]);
+    $password = $_POST["password"];
     
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user'] = $user;
-        header("Location: index.php");
-        exit;
+    if (empty($login) || empty($password)) {
+        $error = "Bitte füllen Sie alle Felder aus.";
     } else {
-        $error = "Ungültige Anmeldedaten!";
+        // Suche den Benutzer entweder per Username oder E-Mail
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? OR email = ?");
+        $stmt->execute([$login, $login]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($user) {
+            if (password_verify($password, $user['password'])) {
+                // Login erfolgreich
+                $_SESSION['user'] = $user;
+                header("Location: index.php");
+                exit;
+            } else {
+                $error = "Falsches Passwort.";
+            }
+        } else {
+            $error = "Benutzer nicht gefunden.";
+        }
     }
 }
-
-include 'header.php';
 ?>
-<main>
+<main class="container">
   <h1>Login</h1>
-  <?php if (isset($error)) echo "<p style='color:red;'>$error</p>"; ?>
+  <?php if (!empty($error)): ?>
+    <p style="color: red;"><?php echo htmlspecialchars($error); ?></p>
+  <?php endif; ?>
+  <?php if (!empty($message)): ?>
+    <p style="color: green;"><?php echo htmlspecialchars($message); ?></p>
+  <?php endif; ?>
   <form method="post" action="login.php">
-    <label for="username">Benutzername:</label>
-    <input type="text" name="username" id="username" required>
-    <br>
-    <label for="password">Passwort:</label>
-    <input type="password" name="password" id="password" required>
-    <br>
-    <input type="submit" value="Login">
+    <div class="form-group">
+      <label for="login">Benutzername oder E-Mail:</label>
+      <input type="text" id="login" name="login" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Passwort:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
+    <div class="actions">
+      <input type="submit" value="Login">
+    </div>
   </form>
+  <p><a href="forgot_password.php">Passwort vergessen?</a></p>
 </main>
 <?php include 'footer.php'; ?>

@@ -1,37 +1,24 @@
 <?php
-// fetch_bingo_fields.php
-session_start();
 include 'db.php';
 
-// Hole die Team-ID aus der Session (falls vorhanden) – ansonsten werden nur Standardfelder verwendet
-$team_id = isset($_SESSION['team_id']) ? $_SESSION['team_id'] : null;
-
-// Zuerst teambezogene Felder laden (falls vorhanden)
-if ($team_id) {
-    $stmt = $pdo->prepare("SELECT * FROM bingo_fields WHERE team_id = ? AND approved = 1");
-    $stmt->execute([$team_id]);
-    $teamFields = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} else {
-    $teamFields = [];
+try {
+    // Beispiel: Es werden 25 zufällig ausgewählte und freigegebene Bingofelder geladen.
+    // Passe den Query ggf. an, wenn Du zusätzlich nach team_id filtern möchtest.
+    $stmt = $pdo->query("SELECT * FROM bingo_fields WHERE approved = 1 ORDER BY RAND() LIMIT 25");
+    $fields = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    echo "<p>Fehler beim Laden der Bingofelder: " . htmlspecialchars($e->getMessage()) . "</p>";
+    exit;
 }
 
-// Wenn weniger als 25 Felder vorhanden, Standardfelder laden
-if (count($teamFields) < 25) {
-    $stmt = $pdo->prepare("SELECT * FROM bingo_fields WHERE is_standard = 1 AND approved = 1");
-    $stmt->execute();
-    $standardFields = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $fields = array_merge($teamFields, $standardFields);
-    $fields = array_slice($fields, 0, 25);
+if ($fields) {
+    foreach ($fields as $field) {
+        // Ausgabe jedes Feldes mit data-field-id und onclick, um toggleActive aufzurufen.
+        echo '<div class="bingo-cell" data-field-id="' . htmlspecialchars($field['id']) . '" onclick="toggleActive(this)">';
+        echo htmlspecialchars($field['description']);
+        echo '</div>';
+    }
 } else {
-    $fields = array_slice($teamFields, 0, 25);
-}
-
-// Mische die Felder zufällig
-shuffle($fields);
-
-// Generiere den HTML-Code für 25 Felder
-foreach ($fields as $field) {
-    $text = htmlspecialchars($field['description']);
-    echo "<div class='bingo-cell' onclick='toggleActive(this)'>$text</div>";
+    echo '<p>Keine Bingofelder gefunden.</p>';
 }
 ?>

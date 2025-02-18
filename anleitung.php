@@ -1,39 +1,44 @@
 <?php
 include 'header.php';
 ?>
-<main>
-  <h1>Anleitung</h1>
+<main class="container">
+  <h1>Anleitung – Basketball Bingo</h1>
   
-  <h2>1. Anmeldung & Spielstart</h2>
-  <ul>
-    <li><strong>Registrierung & Login:</strong> Du kannst Dich als registrierter Benutzer anmelden oder als Gast spielen. Registrierte Benutzer haben den Vorteil, dass ihre Ergebnisse in der Bestenliste gespeichert werden.</li>
-    <li><strong>Spielauswahl:</strong> Wähle zuerst einen Verein, dann ein Team und schließlich ein Spiel (mit Gegner und Uhrzeit). Deine Auswahl wird gespeichert und führt Dich ins Spiel.</li>
-  </ul>
+  <section>
+    <h2>Anmeldung & Spielstart</h2>
+    <p>Du kannst Dich entweder als registrierter Benutzer anmelden oder als Gast spielen. Registrierte Benutzer haben den Vorteil, dass ihre Ergebnisse dauerhaft in der Bestenliste gespeichert werden.</p>
+    <p>Auf der Spielauswahl-Seite wählst Du zunächst einen Verein, anschließend ein Team dieses Vereins und schließlich ein Spiel (mit Gegner und Uhrzeit) aus. Deine Auswahl wird gespeichert und führt Dich zum eigentlichen Bingo-Spiel.</p>
+  </section>
   
-  <h2>2. Das Spiel</h2>
-  <ul>
-    <li><strong>Bingo-Feld:</strong> Es erscheint ein 5x5-Feld, in dem Du durch Anklicken einzelner Felder Ereignisse markieren kannst. Wird eine vollständige Reihe, Spalte oder Diagonale aktiviert, erscheint in der Mitte „Bingo“.</li>
-    <li><strong>Viertel & Verlängerung:</strong> Das Spiel besteht aus mindestens 4 Vierteln. Am Ende des 4. Viertels kannst Du wählen: „Spiel beendet“ (Ergebnisse werden gespeichert) oder „Verlängerung“ (neues Bingo-Feld wird generiert, sodass das Spiel 5 Viertel umfasst).</li>
-  </ul>
+  <section>
+    <h2>So funktioniert das Spiel</h2>
+    <ul>
+      <li>Beim Spielstart erscheint ein 5x5 Bingo-Feld, das auf Desktop, Tablet und Smartphone optimal dargestellt wird.</li>
+      <li>Klicke auf einzelne Felder, um Spielereignisse zu markieren.</li>
+      <li>Sobald eine vollständige Reihe, Spalte oder Diagonale aktiviert wird, erscheint in der Mitte „Bingo“ – und Deine Leistung wird in der Bestenliste vermerkt.</li>
+      <li>Das Spiel ist in Viertel unterteilt. Nach jedem Viertel wird das Bingo-Feld zufällig neu generiert.</li>
+      <li>Nach dem 4. Viertel hast Du die Wahl: Entweder beendest Du das Spiel, sodass Deine Ergebnisse (z. B. aktivierte Felder und Bingos) gespeichert werden, oder Du spielst eine optionale Verlängerung (5. Viertel), die dann in den Endergebnissen berücksichtigt wird.</li>
+    </ul>
+  </section>
   
-  <h2>3. Scoreboard & Statistiken</h2>
-  <ul>
-    <li><strong>Bestenliste:</strong> Deine Ergebnisse (aktivierte Felder, Bingos, Gewinnquote, Feldquote) werden in der Bestenliste angezeigt.</li>
-    <li><strong>Seitenstatistiken:</strong> Im Footer findest Du die Gesamtzahl der gespielten Spiele und die Seitenaufrufe.</li>
-  </ul>
+  <section>
+    <h2>Bestenliste & Statistiken</h2>
+    <p>Am Ende des Spiels werden Deine Ergebnisse – etwa die Anzahl aktivierter Felder, erreichte Bingos, Gewinnquote und Feldquote – in der Bestenliste gespeichert. Zudem siehst Du im Footer die Gesamtanzahl der gespielten Spiele und die Seitenaufrufe.</p>
+  </section>
   
-  <h2>4. Vorschläge</h2>
-  <ul>
-    <li>Du kannst auch eigene Ideen einreichen – z. B. neue Vereins-, Team- oder Spielvorschläge, sowie Bingo-Felder.</li>
-  </ul>
+  <section>
+    <h2>Vorschläge & Feedback</h2>
+    <p>Hast Du eigene Ideen oder Verbesserungsvorschläge? Im Vorschlagsbereich kannst Du Ideen für neue Vereins- oder Teamnamen, Bingo-Felder oder Spielvarianten einreichen. Dein Feedback hilft, das Spiel stetig zu verbessern.</p>
+  </section>
   
-  <h2>5. Tipps & Sicherheit</h2>
-  <ul>
-    <li>Das Spiel ist für alle Endgeräte optimiert und läuft über HTTPS, sodass alle Daten sicher übertragen werden.</li>
-    <li>Bei Fragen oder Problemen kannst Du den Feedback-Bereich nutzen.</li>
-  </ul>
-  
-  <p>Viel Spaß beim Spielen und Punkten!</p>
+  <section>
+    <h2>Tipps & Hinweise</h2>
+    <ul>
+      <li>Die Seite ist responsiv gestaltet – auf Smartphones und Tablets kannst Du über das Hamburger-Menü navigieren.</li>
+      <li>Alle Daten werden sicher über HTTPS übertragen.</li>
+      <li>Bei Fragen oder Problemen wende Dich bitte an den Support.</li>
+    </ul>
+  </section>
 </main>
 <?php
 include 'footer.php';

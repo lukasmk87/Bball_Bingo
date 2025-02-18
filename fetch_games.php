@@ -1,15 +1,21 @@
 <?php
-// fetch_games.php
 include 'db.php';
 
 if (isset($_GET['team_id'])) {
     $team_id = intval($_GET['team_id']);
-    $stmt = $pdo->prepare("SELECT * FROM games WHERE team_id = ?");
+    // Wähle nur Spiele, deren Startzeit NICHT mehr als 3 Stunden zurückliegt
+    $stmt = $pdo->prepare("SELECT * FROM games WHERE team_id = ? AND time >= DATE_SUB(NOW(), INTERVAL 3 HOUR) ORDER BY time ASC");
     $stmt->execute([$team_id]);
     $games = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    echo '<option value="">Wählen Sie ein Spiel</option>';
-    foreach ($games as $game) {
-        // Es wird angenommen, dass die Tabelle "games" Spalten wie opponent und time besitzt
-        echo '<option value="' . $game['id'] . '">' . htmlspecialchars($game['opponent']) . ' - ' . htmlspecialchars($game['time']) . '</option>';
+    
+    if ($games) {
+        foreach ($games as $game) {
+            // Formatieren der Spielzeit, z. B. "TT.MM.JJJJ HH:MM"
+            $displayTime = date("d.m.Y H:i", strtotime($game['time']));
+            echo '<option value="' . htmlspecialchars($game['id']) . '">Gegner: ' . htmlspecialchars($game['opponent']) . ' - ' . $displayTime . '</option>';
+        }
+    } else {
+        echo '<option value="">Keine Spiele verfügbar</option>';
     }
 }
+?>

@@ -106,9 +106,9 @@ footer {
 }
 
 /* -----------------------------
-   Debug-Indikator (Frontend, falls benötigt)
+   Debug-Indikator
 ------------------------------ */
-.debug-indikator {
+.debug-indicator {
   position: fixed;
   bottom: 0;
   right: 0;
@@ -120,7 +120,7 @@ footer {
 }
 
 /* -----------------------------
-   Moderne Formularelemente (Dropdowns, Input-Felder) – Frontend
+   Moderne Formularelemente
 ------------------------------ */
 .form-group {
   margin-bottom: 15px;
@@ -133,24 +133,7 @@ footer {
   color: #333;
 }
 
-.form-group select {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #fff;
-  font-size: 1em;
-  color: #333;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.form-group select:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0,123,255,0.5);
-}
-
+.form-group select,
 .form-group input[type="text"],
 .form-group input[type="password"],
 .form-group input[type="email"],
@@ -167,13 +150,14 @@ footer {
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+.form-group select:focus,
 .form-group input:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0,123,255,0.5);
 }
 
-/* Mobile Optimierung: Größere Touch-Flächen */
+/* Mobile Optimierung für Formularelemente */
 @media (max-width: 768px) {
   .form-group select,
   .form-group input {
@@ -181,22 +165,48 @@ footer {
     padding: 12px 14px;
   }
 }
-
-/* Styling für den "Nächstes Viertel" Button */
-#next-quarter {
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  border: none;
-  color: #fff;
-  padding: 12px 24px;
-  font-size: 1.2em;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  margin-top: 20px;
+/* Header Logo */
+header .logo {
+  float: left;
+  margin-right: 15px;
 }
-#next-quarter:hover {
-  background: linear-gradient(135deg, #0056b3, #003f7f);
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+header .logo img {
+  max-height: 50px; /* Passe die Höhe nach Bedarf an */
+  display: block;
+}
+
+
+.scoreboard-container {
+    max-width: 800px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.scoreboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95em;
+}
+
+.scoreboard-table th, 
+.scoreboard-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.scoreboard-table th {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.scoreboard-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.scoreboard-table tr:hover {
+    background-color: #f1f1f1;
 }

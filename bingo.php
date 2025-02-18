@@ -15,12 +15,14 @@ if (!isset($_SESSION['team_id'])) {
   <div id="bingo-board" class="bingo-board" style="position: relative;">
     <?php include 'fetch_bingo_fields.php'; ?>
   </div>
-  <div class="actions">
+  <div class="actions" style="text-align: center; margin-top: 20px;">
     <button id="next-quarter" onclick="nextQuarter()">Nächstes Viertel</button>
+    <button id="fullscreen-btn" onclick="toggleFullScreen()">Vollbild</button>
   </div>
 </main>
+
 <script>
-// Globale Variablen zur Kumulierung
+// Globale Variablen zur Kumulierung der Ergebnisse
 var quarter = 1;
 var cumulativeActivatedFields = 0;
 var cumulativeBingos = 0;
@@ -174,10 +176,11 @@ function showEndGameOptions() {
   btnEnd.style.padding = "10px 20px";
   btnEnd.style.fontSize = "1em";
   btnEnd.style.border = "none";
-  btnEnd.style.borderRadius = "5px";
+  btnEnd.style.borderRadius = "8px";
   btnEnd.style.backgroundColor = "#28a745";
   btnEnd.style.color = "#fff";
   btnEnd.style.cursor = "pointer";
+  btnEnd.style.transition = "transform 0.2s, box-shadow 0.2s";
   btnEnd.onclick = function() {
     document.body.removeChild(overlay);
     recordFinalScore();
@@ -190,10 +193,11 @@ function showEndGameOptions() {
   btnExt.style.padding = "10px 20px";
   btnExt.style.fontSize = "1em";
   btnExt.style.border = "none";
-  btnExt.style.borderRadius = "5px";
+  btnExt.style.borderRadius = "8px";
   btnExt.style.backgroundColor = "#007bff";
   btnExt.style.color = "#fff";
   btnExt.style.cursor = "pointer";
+  btnExt.style.transition = "transform 0.2s, box-shadow 0.2s";
   btnExt.onclick = function() {
     document.body.removeChild(overlay);
     quarter++; // Erhöhe Viertelzahl (jetzt 5)
@@ -245,6 +249,40 @@ function recordFinalScore() {
            '&win_rate=' + win_rate +
            '&field_rate=' + field_rate);
 }
+
+function toggleFullScreen() {
+    // Auf mobilen Geräten (z. B. wenn die Fensterbreite kleiner als 768px ist) den Fullscreen-Modus für das gesamte Dokument anfordern
+    var element = window.innerWidth < 768 ? document.documentElement : document.getElementById('bingo-board');
+
+    if (!document.fullscreenElement &&
+        !document.mozFullScreenElement && 
+        !document.webkitFullscreenElement && 
+        !document.msFullscreenElement) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) { // Firefox
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullscreen) { // Chrome, Safari und Opera
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) { // IE/Edge
+            element.msRequestFullscreen();
+		} else if (element.webkitEnterFullscreen) { //iphone
+			element.webkitEnterFullscreen();
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
+
+
 </script>
 <style>
 /* Modernes, farbenfrohes Styling für das Bingo-Feld */
@@ -267,12 +305,11 @@ function recordFinalScore() {
   align-items: center;
   justify-content: center;
   font-size: 1.2em;
-  /* Erhöhte Höhe für mehrzeiligen Inhalt */
   min-height: 120px;
   padding: 10px;
   cursor: pointer;
   transition: transform 0.2s ease, background 0.2s ease;
-  white-space: normal; /* Mehrzeilig erlauben */
+  white-space: normal;
   word-wrap: break-word;
 }
 
@@ -305,6 +342,26 @@ function recordFinalScore() {
 /* End Game Overlay */
 #endGameOverlay {
   font-family: Arial, sans-serif;
+}
+
+/* Vollbildmodus-Button: Optional, falls Du diesen auch neben "Nächstes Viertel" einblenden möchtest */
+/* Falls nicht benötigt, kann dieser Button entfallen */
+#fullscreen-btn {
+  background: linear-gradient(135deg, #ff7e5f, #feb47b);
+  border: none;
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 1.2em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  margin-top: 20px;
+}
+#fullscreen-btn:hover {
+  background: linear-gradient(135deg, #feb47b, #ff7e5f);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 </style>
 <?php include 'footer.php'; ?>
