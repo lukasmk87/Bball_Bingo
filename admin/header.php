@@ -1,14 +1,15 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
 
-// Prüfen, ob ein Admin eingeloggt ist
 if (!isset($_SESSION['user']) || !isset($_SESSION['user']['is_admin']) || $_SESSION['user']['is_admin'] != 1) {
     header("Location: ../login.php");
     exit;
 }
 
 include '../db.php';
-include '../settings.php';
+include_once '../settings.php';  // Verwende include_once, um Mehrfachdeklarationen zu vermeiden
 $debug_mode = get_debug_mode($pdo);
 ?>
 <!DOCTYPE html>
@@ -17,20 +18,19 @@ $debug_mode = get_debug_mode($pdo);
   <meta charset="UTF-8">
   <title>Admin Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Zentrale CSS für den Admin-Bereich -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="sidebar">
     <h2>Admin Dashboard</h2>
     <ul>
-      <li><a href="dashboard.php">Übersicht</a></li>
+      <li><a href="dashboard.php">�bersicht</a></li>
       <li><a href="users.php">Benutzerverwaltung</a></li>
       <li><a href="clubs.php">Vereine</a></li>
       <li><a href="teams.php">Teams</a></li>
       <li><a href="games.php">Spiele</a></li>
       <li><a href="bingofields.php">Bingo Felder</a></li>
-      <li><a href="suggestions.php">Vorschläge</a></li>
+      <li><a href="suggestions.php">Vorschl�ge</a></li>
       <li><a href="statistics.php">Statistiken</a></li>
       <li><a href="debug_settings.php">Debug Einstellungen</a></li>
       <li><a href="site_settings.php">Einstellungen</a></li>
@@ -40,9 +40,4 @@ $debug_mode = get_debug_mode($pdo);
     </ul>
   </div>
   <div class="content">
-    <?php
-    // Falls der Debug-Modus aktiviert ist, wird ein Debug-Indikator eingeblendet
-    if ($debug_mode) {
-        echo '<div class="debug-indicator">Debug Mode ON</div>';
-    }
-    ?>
+    <?php if ($debug_mode) echo '<div class="debug-indicator">Debug Mode ON</div>'; ?>
