@@ -3,7 +3,7 @@ session_start();
 include 'db.php';
 include 'header.php';
 
-// Prüfen, ob ein Team ausgewählt wurde
+// Prüfe, ob ein Team ausgewählt wurde
 if (!isset($_SESSION['team_id'])) {
     echo "<p>Kein Team ausgewählt. Bitte wähle zuerst ein Team im Spiel-Auswahlbereich.</p>";
     exit;
@@ -142,7 +142,7 @@ function loadNewFields() {
   xhr.send();
 }
 
-// Zeigt ein Overlay mit den Optionen "Spiel beendet" oder "Verlängerung" an, wenn das 4. Viertel erreicht ist
+// Zeigt ein Overlay mit den Optionen "Spiel beendet" oder "Verlängerung", wenn das 4. Viertel erreicht ist
 function showEndGameOptions() {
   var overlay = document.createElement('div');
   overlay.id = "endGameOverlay";
@@ -173,6 +173,11 @@ function showEndGameOptions() {
   btnEnd.innerText = "Spiel beendet";
   btnEnd.style.padding = "10px 20px";
   btnEnd.style.fontSize = "1em";
+  btnEnd.style.border = "none";
+  btnEnd.style.borderRadius = "5px";
+  btnEnd.style.backgroundColor = "#28a745";
+  btnEnd.style.color = "#fff";
+  btnEnd.style.cursor = "pointer";
   btnEnd.onclick = function() {
     document.body.removeChild(overlay);
     recordFinalScore();
@@ -184,6 +189,11 @@ function showEndGameOptions() {
   btnExt.innerText = "Verlängerung";
   btnExt.style.padding = "10px 20px";
   btnExt.style.fontSize = "1em";
+  btnExt.style.border = "none";
+  btnExt.style.borderRadius = "5px";
+  btnExt.style.backgroundColor = "#007bff";
+  btnExt.style.color = "#fff";
+  btnExt.style.cursor = "pointer";
   btnExt.onclick = function() {
     document.body.removeChild(overlay);
     quarter++; // Erhöhe Viertelzahl (jetzt 5)
@@ -209,7 +219,6 @@ function nextQuarter() {
   } else if (quarter === 4) {
     showEndGameOptions();
   } else if (quarter === 5) {
-    // Nach Verlängerung (5. Viertel) wird das Spiel beendet
     cumulativeActivatedFields += countActiveFields();
     recordFinalScore();
     alert("Spiel vorbei!");
@@ -238,48 +247,62 @@ function recordFinalScore() {
 }
 </script>
 <style>
-/* Bingo board grid styles */
-#bingo-board {
+/* Modernes, farbenfrohes Styling für das Bingo-Feld */
+.bingo-board {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
-  width: 100vw;
-  height: 80vh;
+  gap: 10px;
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
 }
 
 .bingo-cell {
-  border: 1px solid #000;
+  background: linear-gradient(135deg, #6dd5ed, #2193b0);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   display: flex;
-  justify-content: center;
   align-items: center;
-  font-size: calc(10px + 2vmin);
-  text-align: center;
-  padding: 5px;
-  box-sizing: border-box;
-  background-color: #fff;
+  justify-content: center;
+  font-size: 1.2em;
+  /* Erhöhte Höhe für mehrzeiligen Inhalt */
+  min-height: 120px;
+  padding: 10px;
   cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+  white-space: normal; /* Mehrzeilig erlauben */
+  word-wrap: break-word;
+}
+
+.bingo-cell:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #73c8a9, #373b44);
 }
 
 .bingo-cell.active {
-  background-color: #ffff99;
+  background: linear-gradient(135deg, #f7971e, #ffd200);
+  color: #333;
 }
 
-/* Bingo banner */
+/* Bingo Banner */
 #bingo-banner {
   position: absolute;
   top: 50%;
   left: 0;
   width: 100%;
   transform: translateY(-50%);
-  background-color: #ff6666;
+  background: rgba(255, 0, 0, 0.8);
   color: #fff;
   text-align: center;
-  font-size: 3em;
+  font-size: 2em;
   padding: 10px;
+  border-radius: 8px;
   z-index: 10;
 }
 
-/* End game overlay */
+/* End Game Overlay */
 #endGameOverlay {
   font-family: Arial, sans-serif;
 }
