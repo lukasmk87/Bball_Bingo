@@ -24,13 +24,13 @@ $debug_mode = get_debug_mode($pdo);
   <div class="sidebar">
     <h2>Admin Dashboard</h2>
     <ul>
-      <li><a href="dashboard.php">‹bersicht</a></li>
+      <li><a href="dashboard.php">√úbersicht</a></li>
       <li><a href="users.php">Benutzerverwaltung</a></li>
       <li><a href="clubs.php">Vereine</a></li>
       <li><a href="teams.php">Teams</a></li>
       <li><a href="games.php">Spiele</a></li>
       <li><a href="bingofields.php">Bingo Felder</a></li>
-      <li><a href="suggestions.php">Vorschl‰ge</a></li>
+      <li><a href="suggestions.php">Vorschl√§ge</a></li>
       <li><a href="statistics.php">Statistiken</a></li>
       <li><a href="debug_settings.php">Debug Einstellungen</a></li>
       <li><a href="site_settings.php">Einstellungen</a></li>
