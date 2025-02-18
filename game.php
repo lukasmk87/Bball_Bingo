@@ -1,77 +1,67 @@
 <?php
+// Aktivieren des Output Buffering – das verhindert unerwünschte Ausgaben vor dem Redirect
+ob_start();
+
 session_start();
 include 'db.php';
-include 'settings.php';
+include 'header.php';
 
-$debug = get_debug_mode($pdo);
-$errorMessage = "";
+// Vereine aus der Datenbank abrufen
+try {
+    $stmt = $pdo->query("SELECT * FROM clubs ORDER BY name");
+    $clubs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Hier sollte keine Ausgabe erfolgen – stattdessen loggen wir den Fehler
+    error_log("Fehler beim Laden der Vereine: " . $e->getMessage());
+    $clubs = [];
+}
 
-// Formularverarbeitung – muss vor jeglicher Ausgabe erfolgen
+// Formularverarbeitung – muss vor jeglicher Ausgabe erfolgen!
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['club']) && !empty($_POST['team']) && !empty($_POST['game'])) {
         $_SESSION['club_id'] = $_POST['club'];
         $_SESSION['team_id'] = $_POST['team'];
         $_SESSION['game_id'] = $_POST['game'];
-        
-        // Erhöhe den globalen Spiele-Zähler
-        $stmt = $pdo->prepare("UPDATE global_stats SET games_played = games_played + 1 WHERE id = 1");
-        $stmt->execute();
-        
-        // Aktualisiere die spielbezogenen Statistiken:
-        $game_id = $_POST['game'];
-        $stmt = $pdo->prepare("INSERT INTO game_stats (game_id, play_count) VALUES (?, 1)
-            ON DUPLICATE KEY UPDATE play_count = play_count + 1");
-        $stmt->execute([$game_id]);
-        
-        if ($debug) {
-            error_log("DEBUG: Session gesetzt: " . print_r($_SESSION, true));
-        }
         header("Location: bingo.php");
         exit;
     } else {
         $errorMessage = "Bitte alle Felder ausfüllen.";
-        if ($debug) {
-            error_log("DEBUG: POST-Daten: " . print_r($_POST, true));
-        }
     }
 }
-
-include 'header.php';
-
-// Vereine laden (wie gehabt)
-$stmt = $pdo->query("SELECT * FROM clubs");
-$clubs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <main>
   <h1>Spiel Auswahl</h1>
-  <?php if (!empty($errorMessage)): ?>
+  <?php if(isset($errorMessage)): ?>
     <p style="color:red;"><?php echo htmlspecialchars($errorMessage); ?></p>
   <?php endif; ?>
-  <?php if (empty($clubs)): ?>
-    <p>Keine Vereine gefunden. Bitte füge im Admin-Bereich zunächst Vereine hinzu.</p>
+  <?php if(empty($clubs)): ?>
+    <p>Keine Vereine gefunden. Bitte füge zuerst Vereine im Admin-Bereich hinzu.</p>
   <?php else: ?>
     <form method="post" action="game.php">
-      <label for="club">Verein:</label>
-      <select name="club" id="club" required onchange="fetchTeams(this.value)">
-        <option value="">Wählen Sie einen Verein</option>
-        <?php foreach ($clubs as $club): ?>
-          <option value="<?php echo $club['id']; ?>"><?php echo htmlspecialchars($club['name']); ?></option>
-        <?php endforeach; ?>
-      </select>
-      <br>
-      <label for="team">Team:</label>
-      <select name="team" id="team" required onchange="fetchGames(this.value)">
-        <option value="">Wählen Sie ein Team</option>
-        <!-- Teams werden per AJAX geladen -->
-      </select>
-      <br>
-      <label for="game">Spiel (Gegner und Uhrzeit):</label>
-      <select name="game" id="game" required>
-        <option value="">Wählen Sie ein Spiel</option>
-        <!-- Spiele werden per AJAX geladen -->
-      </select>
-      <br>
-      <input type="submit" value="Spiel starten">
+      <div class="form-group">
+         <label for="club">Verein:</label>
+         <select name="club" id="club" required onchange="fetchTeams(this.value)">
+           <option value="">-- Verein auswählen --</option>
+           <?php foreach ($clubs as $club): ?>
+             <option value="<?php echo $club['id']; ?>"><?php echo htmlspecialchars($club['name']); ?></option>
+           <?php endforeach; ?>
+         </select>
+      </div>
+      <div class="form-group">
+         <label for="team">Team:</label>
+         <select name="team" id="team" required onchange="fetchGames(this.value)">
+           <option value="">-- Team auswählen --</option>
+         </select>
+      </div>
+      <div class="form-group">
+         <label for="game">Spiel (Gegner &amp; Uhrzeit):</label>
+         <select name="game" id="game" required>
+           <option value="">-- Spiel auswählen --</option>
+         </select>
+      </div>
+      <div class="actions">
+         <input type="submit" value="Spiel starten">
+      </div>
     </form>
   <?php endif; ?>
 </main>
@@ -82,12 +72,12 @@ function fetchTeams(clubId) {
   xhr.onload = function() {
     if (xhr.status === 200) {
       document.getElementById('team').innerHTML = xhr.responseText;
-      // Setze das Spiele-Dropdown zurück
-      document.getElementById('game').innerHTML = '<option value="">Wählen Sie ein Spiel</option>';
+      document.getElementById('game').innerHTML = '<option value="">-- Spiel auswählen --</option>';
     }
   };
   xhr.send();
 }
+
 function fetchGames(teamId) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'fetch_games.php?team_id=' + teamId, true);
@@ -99,4 +89,8 @@ function fetchGames(teamId) {
   xhr.send();
 }
 </script>
-<?php include 'footer.php'; ?>
+<?php
+// Schließen des Output Buffers (die Ausgabe wird jetzt erst gesendet)
+ob_end_flush();
+include 'footer.php';
+?>

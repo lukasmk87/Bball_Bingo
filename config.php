@@ -1,7 +1,6 @@
 <?php
-// config.php
-// Datenbankkonfiguration (wird später ggf. durch den Installationsassistenten beschrieben)
+// Datenbankkonfiguration
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'bingo_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'd042065d');
+define('DB_USER', 'd042065d');
+define('DB_PASS', 'RTorVqT7jUabWdDWVEbd');
