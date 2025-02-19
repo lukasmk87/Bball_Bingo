@@ -145,11 +145,11 @@ $mailer->send($email);
 ```
 
 ## Support-Ticket-System
-- ** Ticket-Erstellung:**
+- **Ticket-Erstellung:**
 Benutzer können über die Frontend-Seite support.php ein Ticket erstellen.
-- ** Ticket-Verwaltung:**
+- **Ticket-Verwaltung:**
 Administratoren können über den Admin-Bereich (admin/tickets.php) alle Support-Tickets einsehen und bearbeiten.
-- ** Passwort-Reset:**
+- **Passwort-Reset:**
 Benutzer, die ihr Passwort vergessen haben, können über ein Ticket ein neues Passwort anfordern, das per E-Mail (über Symfony Mailer) versendet wird.
 
 ## Technische Dokumentation
