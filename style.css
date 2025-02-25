@@ -31,6 +31,17 @@ header h1 {
   font-size: 1.5em;
 }
 
+/* Logo im Header */
+header .logo {
+  float: left;
+  margin-right: 15px;
+}
+
+header .logo img {
+  max-height: 50px;
+  display: block;
+}
+
 /* -----------------------------
    Navigation
 ------------------------------ */
@@ -165,17 +176,35 @@ footer {
     padding: 12px 14px;
   }
 }
-/* Header Logo */
-header .logo {
-  float: left;
-  margin-right: 15px;
-}
-header .logo img {
-  max-height: 50px; /* Passe die Höhe nach Bedarf an */
-  display: block;
+
+/* -----------------------------
+   Moderne Buttons (Frontend)
+------------------------------ */
+.button,
+.actions input[type="submit"],
+.actions button {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 1.1em;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
+.button:hover,
+.actions input[type="submit"]:hover,
+.actions button:hover {
+  background: linear-gradient(135deg, #0056b3, #003f7f);
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
 
+/* -----------------------------
+   Scoreboard Container & Table
+------------------------------ */
 .scoreboard-container {
     max-width: 800px;
     margin: 20px auto;
@@ -210,3 +239,8 @@ header .logo img {
 .scoreboard-table tr:hover {
     background-color: #f1f1f1;
 }
+
+/* -----------------------------
+   Zusätzliche Styles (optional)
+------------------------------ */
+/* Hier können weitere spezifische Styles ergänzt werden */
